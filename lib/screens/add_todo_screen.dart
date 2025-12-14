@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AddTodoScreen extends StatefulWidget {
@@ -27,10 +28,13 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is Map<String, dynamic>) {
-      _editingId = args['id'] as String?;
-      _titleController = TextEditingController(text: args['title'] ?? '');
-      _descController = TextEditingController(text: args['description'] ?? '');
+
+    if (args is Map<String, dynamic>) {
+      _editingId = args['id'];
+      _titleController =
+          TextEditingController(text: args['title'] ?? '');
+      _descController =
+          TextEditingController(text: args['description'] ?? '');
       _colorValue = args['colorValue'] ?? Colors.blue.value;
     } else {
       _editingId = null;
@@ -51,81 +55,167 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
 
-    final result = {
+    Navigator.pop(context, {
       if (_editingId != null) 'id': _editingId,
       'title': title,
       'description': _descController.text.trim(),
       'colorValue': _colorValue,
-    };
-
-    Navigator.pop(context, result);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isEditing = _editingId != null;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 700),
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0B0B0C), Color(0xFF1E1E1F)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(isEditing ? 'Edit Todo' : 'Add Todo', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _descController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 10),
-                  Align(alignment: Alignment.centerLeft, child: Text('Color', style: Theme.of(context).textTheme.bodyMedium)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: _palette.map((c) {
-                      final selected = c.value == _colorValue;
-                      return GestureDetector(
-                        onTap: () => setState(() => _colorValue = c.value),
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: c,
-                            shape: BoxShape.circle,
-                            border: selected ? Border.all(width: 3, color: Colors.white) : null,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // HEADER
+                        Text(
+                          isEditing ? 'Edit Task' : 'New Task',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _save,
-                      child: Text(isEditing ? 'Save' : 'Add'),
+                        const SizedBox(height: 6),
+                        Text(
+                          isEditing
+                              ? 'Update your task details'
+                              : 'Create a new task to stay productive',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // TITLE
+                        TextField(
+                          controller: _titleController,
+                          decoration: _inputDecoration('Title'),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        // DESCRIPTION
+                        TextField(
+                          controller: _descController,
+                          maxLines: 4,
+                          decoration: _inputDecoration('Description'),
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // COLOR PICKER
+                        const Text(
+                          'Color',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          children: _palette.map((c) {
+                            final selected = c.value == _colorValue;
+                            return GestureDetector(
+                              onTap: () =>
+                                  setState(() => _colorValue = c.value),
+                              child: AnimatedContainer(
+                                duration:
+                                    const Duration(milliseconds: 200),
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: c,
+                                  shape: BoxShape.circle,
+                                  border: selected
+                                      ? Border.all(
+                                          width: 3,
+                                          color: Colors.white,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 26),
+
+                        // ACTIONS
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.deepPurple,
+                                ),
+                                onPressed: _save,
+                                child:
+                                    Text(isEditing ? 'Save' : 'Add'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.06),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     );
   }

@@ -1,0 +1,5 @@
+enum TodoFilter {
+  all,
+  pending,
+  completed,
+}

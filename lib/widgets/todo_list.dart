@@ -33,58 +33,109 @@ class TodoList extends StatelessWidget {
         final task = tasks[index];
         final isOpen = task.id == expandedId;
 
-        return Card(
-          color: Colors.white.withOpacity(0.03),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ExpansionTile(
-            key: ValueKey(task.id),
-            initiallyExpanded: isOpen,
-            onExpansionChanged: (open) => onExpandChange(open ? task.id : null),
-            leading: CircleAvatar(
-              backgroundColor: task.color,
-              child: const Icon(Icons.check, color: Colors.white, size: 18),
+        return Dismissible(
+          key: ValueKey(task.id),
+          direction: DismissDirection.endToStart,
+          onDismissed: (_) => onDelete(task.id),
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
             ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          child: Card(
+            color: Colors.white.withOpacity(0.1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  unselectedWidgetColor: Colors.white70,
+                ),
+                child: ExpansionTile(
+                  key: ValueKey(task.id),
+                  initiallyExpanded: isOpen,
+                  onExpansionChanged: (open) =>
+                      onExpandChange(open ? task.id : null),
+
+                  leading: Checkbox(
+                    value: task.isDone,
+                    onChanged: (_) => onToggle(task.id),
+                  ),
+
+                  title: Text(
                     task.title,
                     style: TextStyle(
                       fontSize: 16,
-                      decoration: task.isDone ? TextDecoration.lineThrough : null,
+                      decoration: task.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                   ),
-                ),
-                Checkbox(value: task.isDone, onChanged: (_) => onToggle(task.id)),
-              ],
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (task.description != null && task.description!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(task.description!, style: const TextStyle(fontSize: 14)),
-                      ),
-                    Row(
-                      children: [
-                        Text(
-                          'Created: ${DateTime.fromMillisecondsSinceEpoch(int.tryParse(task.id) ?? 0).toLocal()}',
-                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+
+                      Text(
+                        'Created: ${DateTime.fromMillisecondsSinceEpoch(int.tryParse(task.id) ?? 0).toLocal()}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
                         ),
-                        const Spacer(),
-                        IconButton(icon: const Icon(Icons.edit, size: 20), onPressed: () => onEdit(task.toJson())),
-                        IconButton(icon: const Icon(Icons.delete_outline, size: 20), onPressed: () => onDelete(task.id)),
-                      ],
-                    ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Row(
+                        children: [
+                          Text(
+                            task.isDone ? 'Completed' : 'Pending',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: task.isDone
+                                  ? Colors.greenAccent
+                                  : Colors.orangeAccent,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => onEdit(task.toJson()),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Icon(
+                                Icons.edit,
+                                size: 16,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(68, 0, 30, 16),
+                        child: Text(
+                          task.description!,
+                          style: const TextStyle(fontSize: 14),
+                          textAlign: TextAlign.justify,
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         );
       },
